@@ -29,6 +29,7 @@ import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { AuthGuard } from './auth/auth.guard';
 import { LoggerService } from '@nestjs/common';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+import { GetUserDto } from './dto/get-user.dto';
 
 
 @Controller('users')
@@ -69,17 +70,19 @@ export class UsersController {
   @Get('/:affiliatedInstitution/:id')
   async getUserInfoByAdmin(
     @Headers() headers: any, 
-    @Param('id', ValidationPipe) id: string,
-    @Param('affiliatedInstitution', ValidationPipe ) affiliatedInstitution: string): Promise<UserInfo> {
-    this.printLoggerServiceLog('l',{id, affiliatedInstitution});
+    @Param() dto: GetUserDto): Promise<UserInfo> {
+
+    this.printLoggerServiceLog('l',dto);
+    const { id, affiliatedInstitution }: GetUserDto = dto;
     const user: User = await this.usersService.getUserInfoById(id, affiliatedInstitution);
+    
     const { 
-      accessLevel,
+    //  accessLevel,
       password,
       signupVerifyToken,
       jwtRefreshToken,
       ...payload
-    } = user
+    } = user;
     return payload;
   }
 
@@ -87,9 +90,11 @@ export class UsersController {
   @Get('/admin/:affiliatedInstitution/:id')
   async getUserInfo(
     @Headers() headers: any, 
-    @Param('id', ValidationPipe) id: string,
-    @Param('affiliatedInstitution', ValidationPipe ) affiliatedInstitution: string): Promise<UserInfo> {
-    this.printLoggerServiceLog('l',{id, affiliatedInstitution});
+    @Param() dto: GetUserDto): Promise<UserInfo> {
+
+    this.printLoggerServiceLog('l',{ dto });
+    const { id, affiliatedInstitution }: GetUserDto = dto
+   
     return this.usersService.getUserInfoById(id, affiliatedInstitution);
   }
 
@@ -147,7 +152,6 @@ export class UsersController {
     // 디테일한 로그인 미구현
     return await this.usersService.reLoginWithExhiredJwtAccessStirng(jwtAccessString, jwtRefreshString, affiliatedInstitution );;
   }
-  
 
 }
 

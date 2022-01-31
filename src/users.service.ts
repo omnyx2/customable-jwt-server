@@ -271,6 +271,7 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException('유저가 존재하지 않습니다');
     }
+    
     return this.authService.login({
       id: user.id,
       name: user.name,

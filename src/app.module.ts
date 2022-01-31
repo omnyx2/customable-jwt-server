@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, NestModule, Module, RequestMethod } from '@nestjs/common';
+import { MiddlewareConsumer, NestModule, Module, Logger, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Connection } from 'typeorm';
@@ -46,7 +46,7 @@ import {
     AuthModule
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, Logger],
 })
 
 export class AppModule implements NestModule {

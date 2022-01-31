@@ -90,13 +90,13 @@ export class AuthService {
 
         const jwtAccessString =  jwt.sign(payload, this.config.jwtAccessSecret, {
             algorithm: "HS256",
-            expiresIn: '30m',
+            expiresIn: '1m',
             audience: 'example.com',
             issuer: 'example.com',
         });
         const jwtRefreshString =  jwt.sign(payload, this.config.jwtRefreshSecret, {
             algorithm: "HS256",
-            expiresIn: '180d',
+            expiresIn: '1m',
             audience: 'example.com',
             issuer: 'example.com',
         });
