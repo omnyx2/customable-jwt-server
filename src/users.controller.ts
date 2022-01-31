@@ -11,6 +11,7 @@ import { Body,
   HttpStatus,
   InternalServerErrorException,
   Inject,
+  SetMetadata,
   Logger,
   UseGuards } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -87,6 +88,7 @@ export class UsersController {
   }
 
   @UseGuards(AuthGuard)
+  @SetMetadata('roles', [1])
   @Get('/admin/:affiliatedInstitution/:id')
   async getUserInfo(
     @Headers() headers: any, 

@@ -1,4 +1,5 @@
 import { Logger, Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core'
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { UsersController } from './users.controller';
@@ -10,6 +11,7 @@ import emailConfig from './config/emailConfig';
 import { validationSchema } from './config/validationSchema';
 // import { AuthService } from './auth/auth.service';
 import { AuthModule } from './auth/auth.module';
+import { RolesGuard } from './roles/roles.guard';
  
 @Module({
   imports: [
@@ -24,7 +26,12 @@ import { AuthModule } from './auth/auth.module';
     AuthModule,
   ],
   
-  providers: [UsersService, EmailService, Logger],
+  providers: [UsersService, EmailService, Logger, 
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: RolesGuard,
+    // }],
+  ],
   controllers: [UsersController],
   exports:[UsersService]
 })

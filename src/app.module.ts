@@ -12,7 +12,10 @@ import emailConfig from './config/emailConfig';
 import authConfig from './config/authConfig'
 import { validationSchema } from './config/validationSchema';
 import { AuthModule } from './auth/auth.module';
+import { APP_GUARD } from '@nestjs/core';
 import * as winston from 'winston';
+import { RolesGuard } from './roles/roles.guard';
+
 import {
   utilities as nestWinstonModuleUtilities,
   WinstonModule,
@@ -29,6 +32,7 @@ import {
       isGlobal: true,
       validationSchema,  
     }),
+    
     // WinstonModule.forRoot({
     //   transports: [
     //     new winston.transports.Console({
@@ -46,7 +50,8 @@ import {
     AuthModule
   ],
   controllers: [AppController],
-  providers: [AppService, Logger],
+  providers: [AppService, Logger,
+],
 })
 
 export class AppModule implements NestModule {
