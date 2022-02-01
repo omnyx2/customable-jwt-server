@@ -22,7 +22,7 @@ import { UserLoginDto } from './dto/user-login.dto';
 import { UserInfo } from './UserInfo';
 import { UsersService } from './users.service';
 import { ValidationPipe } from './validation.pipe';
-import { HttpExceptionFilter } from './http-exception.filter';
+import { HttpExceptionFilter } from './exception/http-exception.filter';
 import { AuthService } from './auth/auth.service';
 import { request } from 'express';
 import { Logger as WinstonLogger } from 'winston';
@@ -31,6 +31,9 @@ import { AuthGuard } from './auth/auth.guard';
 import { LoggerService } from '@nestjs/common';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { GetUserDto } from './dto/get-user.dto';
+import { Roles } from './roles/roles.decorator';
+import { Role } from './roles/role.enum';
+import { RolesGuard } from './roles/roles.guard';
 
 
 @Controller('users')
@@ -43,7 +46,7 @@ export class UsersController {
     private readonly usersService: UsersService,
   ) {}
 
-  
+  private roles: Role[]
   // private printWinstonLog(dto: any) {
   //   console.log(this.logger.name);
 
@@ -68,7 +71,11 @@ export class UsersController {
   // Guard 추가 인가후, system level 2 above or 3일때의 본인
   // 특정 유저 정보 조회, token에 유저의 정보가 표현되어 있지만
   // Rest 명세를 위해서 id에 값을 담아준다
+  // UserGuards를 쓸때 순서를 지켜줘야 된다 가드 실행 순서에 따라 데이터 붙여주는 요건이 조금 다르기 때문이다.
   @Get('/:affiliatedInstitution/:id')
+  @Roles(Role.User)
+  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard)
   async getUserInfoByAdmin(
     @Headers() headers: any, 
     @Param() dto: GetUserDto): Promise<UserInfo> {
@@ -87,14 +94,15 @@ export class UsersController {
     return payload;
   }
 
+  @Roles(Role.Admin)
+  @UseGuards(RolesGuard)
   @UseGuards(AuthGuard)
-  @SetMetadata('roles', [1])
   @Get('/admin/:affiliatedInstitution/:id')
   async getUserInfo(
     @Headers() headers: any, 
     @Param() dto: GetUserDto): Promise<UserInfo> {
 
-    this.printLoggerServiceLog('l',{ dto });
+    // this.printLoggerServiceLog('l',{ dto });
     const { id, affiliatedInstitution }: GetUserDto = dto
    
     return this.usersService.getUserInfoById(id, affiliatedInstitution);
@@ -102,8 +110,10 @@ export class UsersController {
 
   // system level 2 above
   // 전체 유저 조회
-  @UseGuards(AuthGuard)
   @Get()
+  @Roles(Role.Admin)
+  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard) 
   findAll(
     // 유저 명수를 페이징 기법을 통해 받는다
     @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset: number,
@@ -115,9 +125,12 @@ export class UsersController {
 
   // 유저 생성
   @Post()
+  @Roles(Role.User)
+  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard) 
   async createUser(@Body() dto: CreateUserDto): Promise<void> {
     const { name, email, password, affiliatedInstitutions } = dto;
-    this.printLoggerServiceLog('l',{ dto });
+    // this.printLoggerServiceLog('l',{ dto });
     // this.usersService.saveUserUsingTransaction(name, email, password, signupVerifyToken, affiliatedInstitutions)
     this.usersService.createUser(name, email, password, affiliatedInstitutions[0])
     return ;
@@ -134,6 +147,7 @@ export class UsersController {
   // 해당 url은 refresh 토큰을 마구 발급한다 refresh토큰을 마구 발급해서는 좋지 못하므로 이에 대해서 방어를 하는 로직을 짜자
   // 현재는 단순 저장의 형태가 전부다
   // 시니어 개발자님에게 리프레쉬 토큰 전략에 대해서 여쭤볼것
+  
   @Post('/login/:affiliatedInstitution')
   async signIn(
     @Body() dto: UserLoginDto,

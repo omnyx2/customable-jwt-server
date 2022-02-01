@@ -11,6 +11,7 @@ import { ConfigService } from '@nestjs/config';
 import emailConfig from './config/emailConfig';
 import authConfig from './config/authConfig'
 import { validationSchema } from './config/validationSchema';
+import { ExceptionModule } from './exception/exception.module';
 import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import * as winston from 'winston';
@@ -22,7 +23,9 @@ import {
 } from 'nest-winston';
 
 // import { AuthModule } from './auth/auth.module';
-
+import { HealthCheckController } from './health-check/health-check.controller';
+import { TerminusModule } from '@nestjs/terminus';
+import { HttpModule } from '@nestjs/axios';
 @Module({
   imports: [
     // 동적으로 모듈을 DEV, Process, Stage를 호출하는 법
@@ -46,11 +49,14 @@ import {
     //  ]
     // }),
     TypeOrmModule.forRoot(),
+    TerminusModule,
     UsersModule,
-    AuthModule
+    ExceptionModule,
+    AuthModule, 
+    HttpModule
   ],
-  controllers: [AppController],
-  providers: [AppService, Logger,
+  controllers: [AppController, HealthCheckController],
+  providers: [AppService, Logger, HealthCheckController
 ],
 })
 

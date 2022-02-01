@@ -26,7 +26,10 @@ import { RolesGuard } from './roles/roles.guard';
     AuthModule,
   ],
   
-  providers: [UsersService, EmailService, Logger, 
+  providers: [
+    UsersService, 
+    EmailService, 
+    Logger, 
     // {
     //   provide: APP_GUARD,
     //   useClass: RolesGuard,

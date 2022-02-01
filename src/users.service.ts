@@ -92,6 +92,7 @@ export class UsersService {
   }
 
   // 어드민 가입 방식은 아니다. 어드민은 직접 넣어줄 것
+  // 접근 레벨에 대해서는 직접 수정해주는게 맞다고 생각한다.
   // private async saveUser(name: string, email: string, password: string, signupVerifyToken: string, affiliatedInstitutions: string[]) {
   // private async saveAdmin(name: string, email: string, password: string, signupVerifyToken: string, affiliatedInstitutions: string[]) {
   private async saveUser(name: string, email: string, password: string, signupVerifyToken: string, affiliatedInstitutions: string[]) {
@@ -198,10 +199,10 @@ export class UsersService {
       id: user.id,
       name: user.name,
       email: user.email,
+      accessLevel: user.accessLevel,
       lastActivate: await this.saveUserLastActivate(user),
       affiliatedInstitutions: [affiliatedInstitution],
       password: '',
-      accessLevel: 0,
       signupVerifyToken: '',
       jwtRefreshToken: ''
     }
@@ -244,10 +245,10 @@ export class UsersService {
       id: user.id,
       name: user.name,
       email: user.email,
+      accessLevel: user.accessLevel,
       lastActivate: await this.saveUserLastActivate(user),
       affiliatedInstitutions: user.affiliatedInstitutions,
       password: '',
-      accessLevel: 0,
       signupVerifyToken: '',
       jwtRefreshToken: ''
     });
@@ -271,13 +272,13 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException('유저가 존재하지 않습니다');
     }
-    
+
     return this.authService.login({
       id: user.id,
       name: user.name,
       email: user.email,
+      accessLevel: user.accessLevel,
       password: '',
-      accessLevel: 0,
       lastActivate: undefined,
       signupVerifyToken: '',
       affiliatedInstitutions: [],

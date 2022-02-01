@@ -12,7 +12,7 @@ export class CreateUserDto {
     readonly name: string;
 
     @IsString()
-    @IsEmail()
+    // @IsEmail()
     @MaxLength(60)
     readonly email: string;
     
