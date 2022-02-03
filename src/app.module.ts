@@ -50,10 +50,11 @@ import { HttpModule } from '@nestjs/axios';
     // }),
     TypeOrmModule.forRoot(),
     TerminusModule,
+    HttpModule,
     UsersModule,
     ExceptionModule,
     AuthModule, 
-    HttpModule
+   
   ],
   controllers: [AppController, HealthCheckController],
   providers: [AppService, Logger, HealthCheckController

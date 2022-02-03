@@ -213,7 +213,8 @@ export class UsersService {
     if( !!!user.jwtRefreshToken ) {
       user.jwtRefreshToken = payload.jwtRefreshString; 
     } else {
-      const checkJwtRefreshString = await this.authService.verifyOnly(user.jwtRefreshToken);
+      // 만약 리프레쉬 토큰이 만료되지 않았으면 그대로 두고 아니면 교채를 해라
+      const checkJwtRefreshString = await this.authService.verifyRefreshStringOnly(user.jwtRefreshToken);
       if( !!checkJwtRefreshString ) {
         payload.jwtRefreshString = user.jwtRefreshToken;
       } else {
@@ -234,11 +235,16 @@ export class UsersService {
     jwtAccessString: string, 
     jwtRefreshString: string, 
     affiliatedInstitution: string): Promise<string|object> {
-    const checkJwtRefreshString = await this.authService.verify(jwtRefreshString)
+    const checkJwtAccessString: any = await this.authService.verifyOnly(jwtAccessString);
+    console.log(checkJwtAccessString)
+    const checkJwtRefreshString: User = await this.authService.verifyRefreshStringOnly(jwtRefreshString);
     const user: User= await this.usersRepository.findOne({ id: checkJwtRefreshString.id});
       
     if (user === undefined) {
       throw new UnprocessableEntityException('리프레쉬 토큰이 존재하지 않습니다. 다시 로그인 해줘야 합니다');
+    }
+    if (!checkJwtAccessString) {
+      throw new UnprocessableEntityException('액세스 토큰이 유효하지 못합니다');
     }
 
     const payload: string = this.authService.reLogin({

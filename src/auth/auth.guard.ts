@@ -13,7 +13,7 @@ export class AuthGuard implements CanActivate {
   ): boolean | Promise<boolean> | Observable<boolean> {
     const request = context.switchToHttp().getRequest();
     const payload = this.verifyRequest(request);
-    this.attachRolesAtRequest(request, payload);
+    // this.attachRolesAtRequest(request, payload);
     request.user = payload;
      
     return true;
@@ -21,9 +21,12 @@ export class AuthGuard implements CanActivate {
 
   private verifyRequest(request: Request): User {
     const jwtString = request.headers.authorization?.split('Bearer ')[1]
+    console.log(jwtString)
     const payload = this.authService.verify(jwtString);
     return payload;
   }
+  
+  
 
   private attachRolesAtRequest(request: Request, payload: User) {
     request.user = payload

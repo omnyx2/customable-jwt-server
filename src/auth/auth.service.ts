@@ -1,4 +1,4 @@
-import { Injectable, Inject, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Inject, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { User } from 'src/user.entity';
 import { UsersService } from '../users.service';
 import authConfig from 'src/config/authConfig';
@@ -34,8 +34,7 @@ export class AuthService {
             console.log(e)
             return false;
         }
-      }
-
+    }
     verify(jwtString: string): User {
         try {
             
@@ -44,24 +43,31 @@ export class AuthService {
                 this.config.jwtAccessSecret) as 
                 (jwt.JwtPayload | string) & User;
             const { id, email, affiliatedInstitutions } = payload;
+            console.log(this.config.jwtAccessSecret)
             return payload
         //   return {
         //     id: id,
         //     email,
         //     affiliatedInstitutions: affiliatedInstitutions[0]
         //   }
-  
         } catch (e) {
-          throw new UnauthorizedException()
+          throw new ForbiddenException()
         }
     }
-
-    verifyRequest(request: Request): User {
-        const jwtString = request.headers.authorization?.split('Bearer ')[1]
-        const payload = this.verify(jwtString);
-        return payload;
+    verifyRefreshStringOnly(jwtString: string): User {
+        try {
+            const payload = jwt.verify(
+                jwtString, 
+                this.config.jwtRefreshSecret) as 
+                (jwt.JwtPayload | string) & User;
+            const { id, email, affiliatedInstitutions } = payload;
+            console.log(this.config.jwtRefreshSecret);
+            return payload
+        } catch(e) {
+            return null;
+            //throw new ForbiddenException();
+        }
     }
-    
 
     login(user: User): jwtTokenSet {
         const {
