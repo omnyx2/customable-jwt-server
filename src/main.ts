@@ -1,16 +1,13 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { NestExpressApplication } from '@nestjs/platform-express'
 import { ValidationPipe } from '@nestjs/common';
-import * as dotenv from 'dotenv';
-import * as path from 'path';
-import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { AppModule } from './app.module';
+// import * as dotenv from 'dotenv';
 import * as winston from 'winston';
-
 
 import {
   utilities as nestWinstonModuleUtilities,
-  WinstonModule,
+  WinstonModule
 } from 'nest-winston';
 
 async function bootstrap() {
