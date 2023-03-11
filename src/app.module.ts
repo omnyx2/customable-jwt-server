@@ -13,10 +13,7 @@ import authConfig from './config/authConfig'
 import { validationSchema } from './config/validationSchema';
 import { ExceptionModule } from './exception/exception.module';
 import { AuthModule } from './auth/auth.module';
-import { APP_GUARD } from '@nestjs/core';
 import * as winston from 'winston';
-import { RolesGuard } from './roles/roles.guard';
-
 import {
   utilities as nestWinstonModuleUtilities,
   WinstonModule,
@@ -35,7 +32,6 @@ import { HttpModule } from '@nestjs/axios';
       isGlobal: true,
       validationSchema,  
     }),
-    
     // WinstonModule.forRoot({
     //   transports: [
     //     new winston.transports.Console({
@@ -56,9 +52,14 @@ import { HttpModule } from '@nestjs/axios';
     AuthModule, 
    
   ],
+<<<<<<< HEAD
   controllers: [AppController, HealthCheckController],
   providers: [AppService, Logger, HealthCheckController
 ],
+=======
+  controllers: [AppController],
+  providers: [AppService, Logger],
+>>>>>>> parent of a9c0695... release-0.0.1
 })
 
 export class AppModule implements NestModule {
