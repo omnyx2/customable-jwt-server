@@ -12,7 +12,6 @@ import {
   HttpStatus,
   InternalServerErrorException,
   Inject,
-  SetMetadata,
   Logger,
   UseGuards,
 } from '@nestjs/common';
