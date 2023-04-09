@@ -1,4 +1,9 @@
-import { ConsoleLogger, Injectable, UnprocessableEntityException, NotFoundException } from '@nestjs/common';
+import {
+  ConsoleLogger,
+  Injectable,
+  UnprocessableEntityException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Connection } from 'typeorm';
 import { User } from './user.entity';
@@ -8,7 +13,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { EmailService } from 'src/email/email.service';
 import { ulid } from 'ulid';
 import { AuthService } from './auth/auth.service';
-import * as moment from 'moment-timezone'
+import * as moment from 'moment-timezone';
 // email은 유저의 행동과 관련있는서 요청 탐색 조건
 // id는 서버와 서버간 탐색 수단 또는 유저측 자동화의 경우
 
@@ -17,32 +22,53 @@ interface jwtTokenSet {
   jwtRefreshString: string;
 }
 
-@Injectable() 
+//작성 기능 요약
+// 1. 유저생성
+// 2. Id통해 유저 정보 확인
+// 3.
+
+@Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     private authService: AuthService,
     private connection: Connection,
-    private emailService: EmailService
+    private emailService: EmailService,
   ) {}
 
-  async createUser(name: string, email: string, password: string, affiliatedInstitution: string): Promise<void> {
-    const user: User = await this.usersRepository.findOne({email});
+  async createUser(
+    name: string,
+    email: string,
+    password: string,
+    affiliatedInstitution: string,
+  ): Promise<void> {
+    const user: User = await this.usersRepository.findOne({ email });
     const signupVerifyToken: string = uuid.v1();
     //    await this.saveUserUsingTransaction(name, email, password, signupVerifyToken, affiliatedInstitutions);
-      
-    if ( user === undefined ) {
-      await this.saveUserUsingTransaction(name, email, password, signupVerifyToken, affiliatedInstitution); 
+    console.log(email);
+    if (user === undefined) {
+      await this.saveUserUsingTransaction(
+        name,
+        email,
+        password,
+        signupVerifyToken,
+        affiliatedInstitution,
+      );
     } else {
-      if ( user.affiliatedInstitutions.includes(affiliatedInstitution) ) { 
-        throw new UnprocessableEntityException('이미 가입되어 있습니다. 수 없습니다.');
-      } else {      
-        await this.saveUserServiceUsingTransaction( email, affiliatedInstitution); 
+      if (user.affiliatedInstitutions.includes(affiliatedInstitution)) {
+        throw new UnprocessableEntityException(
+          '이미 가입되어 있습니다. 수 없습니다.',
+        );
+      } else {
+        await this.saveUserServiceUsingTransaction(
+          email,
+          affiliatedInstitution,
+        );
       }
     }
     // 로그인 승인 토큰 전달
-  
+
     // 회원 가입 인증 이메일 발송, 시스템 회원 가입이면 무시
     // await this.sendMemberJoinEmail(email, signupVerifyToken);
     // return ;
@@ -53,20 +79,27 @@ export class UsersService {
   // }
   // 이 서비스를 이용하는 경우는 이미 토큰을 통해 올바른 사용자임을 검증하고 넘어간다.
   // 하지만 그래도 이중 체크
-  async getUserInfoById(id: string, affiliatedInstitution: string): Promise<User> {
-
+  async getUserInfoById(
+    id: string,
+    affiliatedInstitution: string,
+  ): Promise<User> {
     const user = await this.usersRepository.findOne({ id: id });
     if (!user) {
       throw new NotFoundException('유저가 존재하지 않습니다');
     }
 
-    const checkUserInService = await this.checkUserInService(user, affiliatedInstitution)
-    if( user && !checkUserInService ){
+    const checkUserInService = await this.checkUserInService(
+      user,
+      affiliatedInstitution,
+    );
+    if (user && !checkUserInService) {
       throw new NotFoundException('잘못된 서비스 입니다.');
     }
-      
+
     return user;
   }
+
+  async checkUserSimple();
 
   private async checkUserExistsByEmail(emailAddress: string): Promise<boolean> {
     const user = await this.usersRepository.findOne({ email: emailAddress });
@@ -78,15 +111,22 @@ export class UsersService {
     return user !== undefined;
   }
 
-
-  private async checkUserInServiceByEmail(username: string, affiliatedInstitution: string): Promise<boolean> {
+  private async checkUserInServiceByEmail(
+    username: string,
+    affiliatedInstitution: string,
+  ): Promise<boolean> {
     const user = await this.usersRepository.findOne({ email: username });
-    console.log(user)
+    console.log(user);
     return user.affiliatedInstitutions.includes(affiliatedInstitution);
   }
 
-  private async checkUserInService(user: User, affiliatedInstitution: string): Promise<boolean> {
-    const userExist: boolean = user.affiliatedInstitutions.includes(affiliatedInstitution);
+  private async checkUserInService(
+    user: User,
+    affiliatedInstitution: string,
+  ): Promise<boolean> {
+    const userExist: boolean = user.affiliatedInstitutions.includes(
+      affiliatedInstitution,
+    );
 
     return userExist;
   }
@@ -95,8 +135,13 @@ export class UsersService {
   // 접근 레벨에 대해서는 직접 수정해주는게 맞다고 생각한다.
   // private async saveUser(name: string, email: string, password: string, signupVerifyToken: string, affiliatedInstitutions: string[]) {
   // private async saveAdmin(name: string, email: string, password: string, signupVerifyToken: string, affiliatedInstitutions: string[]) {
-  private async saveUser(name: string, email: string, password: string, signupVerifyToken: string, affiliatedInstitutions: string[]) {
-    
+  private async saveUser(
+    name: string,
+    email: string,
+    password: string,
+    signupVerifyToken: string,
+    affiliatedInstitutions: string[],
+  ) {
     const user = new User();
     user.id = ulid();
     user.name = name;
@@ -111,12 +156,18 @@ export class UsersService {
     return; // TODO: DB 연동 후 구현
   }
 
-  private async saveUserUsingQueryRunner(name: string, email: string, password: string, signupVerifyToken: string, affiliatedInstitutions: string[]) {
+  private async saveUserUsingQueryRunner(
+    name: string,
+    email: string,
+    password: string,
+    signupVerifyToken: string,
+    affiliatedInstitutions: string[],
+  ) {
     const queryRunner = this.connection.createQueryRunner();
-  
+
     await queryRunner.connect();
     await queryRunner.startTransaction();
-  
+
     try {
       const user = new User();
       user.id = ulid();
@@ -124,9 +175,9 @@ export class UsersService {
       user.email = email;
       user.password = password;
       user.signupVerifyToken = signupVerifyToken;
-  
+
       await queryRunner.manager.save(user);
-  
+
       // throw new InternalServerErrorException(); // 일부러 에러를 발생시켜 본다s
       await queryRunner.commitTransaction();
     } catch (e) {
@@ -139,8 +190,13 @@ export class UsersService {
   }
 
   private async saveUserUsingTransaction(
-    name: string, email: string, password: string, signupVerifyToken: string, affiliatedInstitution: string) {
-    await this.connection.transaction(async manager => {
+    name: string,
+    email: string,
+    password: string,
+    signupVerifyToken: string,
+    affiliatedInstitution: string,
+  ) {
+    await this.connection.transaction(async (manager) => {
       const user = new User();
       user.id = ulid();
       user.name = name;
@@ -149,28 +205,30 @@ export class UsersService {
       user.accessLevel = 3;
       user.signupVerifyToken = signupVerifyToken;
       user.affiliatedInstitutions = [affiliatedInstitution];
-    
+
       // user.signupVerifyToken = signupVerifyToken;
-  
+
       await manager.save(user);
-  
+
       // throw new InternalServerErrorException();
-    })
+    });
   }
 
   // 이미 가입한 회원의 서비스를 늘려주는 방법
   // 가입 서비스 자체가 증가하는 로직
-  private async saveUserServiceUsingTransaction (
-    email: string, affiliatedInstitution: string) {
-      await this.connection.transaction(async manager => {
-        const user: User = await manager.findOne(User, {email})
-        console.log(user.affiliatedInstitutions)
-        user.affiliatedInstitutions.push(affiliatedInstitution);
-      
-        await manager.save(user); 
-      })
-    }
-  
+  private async saveUserServiceUsingTransaction(
+    email: string,
+    affiliatedInstitution: string,
+  ) {
+    await this.connection.transaction(async (manager) => {
+      const user: User = await manager.findOne(User, { email });
+      console.log(user.affiliatedInstitutions);
+      user.affiliatedInstitutions.push(affiliatedInstitution);
+
+      await manager.save(user);
+    });
+  }
+
   findAll(): Promise<User[]> {
     return this.usersRepository.find();
     // return ;
@@ -185,16 +243,23 @@ export class UsersService {
     return result;
   }
 
-  async login(email: string, password: string, affiliatedInstitution: string): Promise<string | object> {
-    const user: User= await this.usersRepository.findOne({ email, password });    
-    if (user === undefined){
+  async login(
+    email: string,
+    password: string,
+    affiliatedInstitution: string,
+  ): Promise<string | object> {
+    const user: User = await this.usersRepository.findOne({ email, password });
+    if (user === undefined) {
       throw new NotFoundException('유저가 존재하지 않습니다');
     }
-    const userExistService: boolean = await this.checkUserInService(user, affiliatedInstitution);
+    const userExistService: boolean = await this.checkUserInService(
+      user,
+      affiliatedInstitution,
+    );
     if (!userExistService) {
       throw new NotFoundException('유저가 서비스에 가입하지 않았습니다');
     }
-    
+
     const userData = {
       id: user.id,
       name: user.name,
@@ -204,44 +269,53 @@ export class UsersService {
       affiliatedInstitutions: [affiliatedInstitution],
       password: '',
       signupVerifyToken: '',
-      jwtRefreshToken: ''
-    }
+      jwtRefreshToken: '',
+    };
 
     let payload: jwtTokenSet = await this.authService.login(userData);
     // 리프레쉬 토큰이 유효할 경우 불러와서 다시 보내준다
     // 이부분의 존재 의의는 리프레쉬 토큰을 단일화 하기 위함이다.
-    if( !!!user.jwtRefreshToken ) {
-      user.jwtRefreshToken = payload.jwtRefreshString; 
+    if (!!!user.jwtRefreshToken) {
+      user.jwtRefreshToken = payload.jwtRefreshString;
     } else {
       // 만약 리프레쉬 토큰이 만료되지 않았으면 그대로 두고 아니면 교채를 해라
-      const checkJwtRefreshString = await this.authService.verifyRefreshStringOnly(user.jwtRefreshToken);
-      if( !!checkJwtRefreshString ) {
+      const checkJwtRefreshString =
+        await this.authService.verifyRefreshStringOnly(user.jwtRefreshToken);
+      if (!!checkJwtRefreshString) {
         payload.jwtRefreshString = user.jwtRefreshToken;
       } else {
-        user.jwtRefreshToken = payload.jwtRefreshString; 
+        user.jwtRefreshToken = payload.jwtRefreshString;
       }
     }
 
-    user.lastActivate = moment().tz("Asia/Seoul").format();
+    user.lastActivate = moment().tz('Asia/Seoul').format();
     await this.usersRepository.save(user);
 
-    return payload
+    return payload;
   }
   // 사용전에 Refresh토큰이 다시 만료되기 위한 조건
   // access토큰이 만료되었지만 정당하다.
   // Refresh토큰은 만료되었지 않다.
   // Refresh토큰이 동일하지 못할 수 있다.
   async reLoginWithExhiredJwtAccessStirng(
-    jwtAccessString: string, 
-    jwtRefreshString: string, 
-    affiliatedInstitution: string): Promise<string|object> {
-    const checkJwtAccessString: any = await this.authService.verifyOnly(jwtAccessString);
-    console.log(checkJwtAccessString)
-    const checkJwtRefreshString: User = await this.authService.verifyRefreshStringOnly(jwtRefreshString);
-    const user: User= await this.usersRepository.findOne({ id: checkJwtRefreshString.id});
-      
+    jwtAccessString: string,
+    jwtRefreshString: string,
+    affiliatedInstitution: string,
+  ): Promise<string | object> {
+    const checkJwtAccessString: any = await this.authService.verifyOnly(
+      jwtAccessString,
+    );
+    console.log(checkJwtAccessString);
+    const checkJwtRefreshString: User =
+      await this.authService.verifyRefreshStringOnly(jwtRefreshString);
+    const user: User = await this.usersRepository.findOne({
+      id: checkJwtRefreshString.id,
+    });
+
     if (user === undefined) {
-      throw new UnprocessableEntityException('리프레쉬 토큰이 존재하지 않습니다. 다시 로그인 해줘야 합니다');
+      throw new UnprocessableEntityException(
+        '리프레쉬 토큰이 존재하지 않습니다. 다시 로그인 해줘야 합니다',
+      );
     }
     if (!checkJwtAccessString) {
       throw new UnprocessableEntityException('액세스 토큰이 유효하지 못합니다');
@@ -256,16 +330,16 @@ export class UsersService {
       affiliatedInstitutions: user.affiliatedInstitutions,
       password: '',
       signupVerifyToken: '',
-      jwtRefreshToken: ''
+      jwtRefreshToken: '',
     });
-    return { jwtAcessString: payload, jwtRefreshString: jwtRefreshString}
+    return { jwtAcessString: payload, jwtRefreshString: jwtRefreshString };
   }
 
   private async saveUserLastActivate(user: User) {
-    const lastActivate: string = moment().tz("Asia/Seoul").format();
-    user.lastActivate = lastActivate
+    const lastActivate: string = moment().tz('Asia/Seoul').format();
+    user.lastActivate = lastActivate;
     await this.usersRepository.save(user);
-    return lastActivate
+    return lastActivate;
   }
 
   async remove(id: string): Promise<void> {
@@ -274,7 +348,7 @@ export class UsersService {
 
   async verifyEmail(signupVerifyToken: string): Promise<string | object> {
     const user = await this.usersRepository.findOne({ signupVerifyToken });
-  
+
     if (!user) {
       throw new NotFoundException('유저가 존재하지 않습니다');
     }
@@ -288,8 +362,7 @@ export class UsersService {
       lastActivate: undefined,
       signupVerifyToken: '',
       affiliatedInstitutions: [],
-      jwtRefreshToken: ''
+      jwtRefreshToken: '',
     });
   }
 }
-

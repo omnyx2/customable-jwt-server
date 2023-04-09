@@ -1,22 +1,24 @@
-import { Body, 
-  Controller, 
+import {
+  Body,
+  Controller,
   Headers,
   UseFilters,
-  Get, 
-  Param, 
-  Post, 
-  Query, 
-  ParseIntPipe, 
-  DefaultValuePipe, 
+  Get,
+  Param,
+  Post,
+  Query,
+  ParseIntPipe,
+  DefaultValuePipe,
   HttpStatus,
   InternalServerErrorException,
   Inject,
   SetMetadata,
   Logger,
-  UseGuards } from '@nestjs/common';
+  UseGuards,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
-import { TokenLoginDto } from './dto/token-login.dto'
+import { TokenLoginDto } from './dto/token-login.dto';
 import { User } from './user.entity';
 import { UserLoginDto } from './dto/user-login.dto';
 import { UserInfo } from './UserInfo';
@@ -35,7 +37,6 @@ import { Roles } from './roles/roles.decorator';
 import { Role } from './roles/role.enum';
 import { RolesGuard } from './roles/roles.guard';
 
-
 @Controller('users')
 export class UsersController {
   constructor(
@@ -46,7 +47,7 @@ export class UsersController {
     private readonly usersService: UsersService,
   ) {}
 
-  private roles: Role[]
+  private roles: Role[];
   // private printWinstonLog(dto: any) {
   //   console.log(this.logger.name);
 
@@ -59,13 +60,24 @@ export class UsersController {
   //   this.logger.silly('silly: ', dto);
   // }
   private printLoggerServiceLog(m, dto) {
-    switch(m) {
-      case('e'): this.logger.error('error: ' + JSON.stringify(dto)); break;
-      case('w'): this.logger.warn('warn: ' + JSON.stringify(dto)); break;
-      case('l'): this.logger.log('log: ' + JSON.stringify(dto)); break;
-      case('v'): this.logger.verbose('verbose: ' + JSON.stringify(dto)); break;
-      case('d'): this.logger.debug('debug: ' + JSON.stringify(dto)); break;
-      default: break;
+    switch (m) {
+      case 'e':
+        this.logger.error('error: ' + JSON.stringify(dto));
+        break;
+      case 'w':
+        this.logger.warn('warn: ' + JSON.stringify(dto));
+        break;
+      case 'l':
+        this.logger.log('log: ' + JSON.stringify(dto));
+        break;
+      case 'v':
+        this.logger.verbose('verbose: ' + JSON.stringify(dto));
+        break;
+      case 'd':
+        this.logger.debug('debug: ' + JSON.stringify(dto));
+        break;
+      default:
+        break;
     }
   }
   // Guard 추가 인가후, system level 2 above or 3일때의 본인
@@ -77,15 +89,18 @@ export class UsersController {
   @UseGuards(RolesGuard)
   @UseGuards(AuthGuard)
   async getUserInfoByAdmin(
-    @Headers() headers: any, 
-    @Param() dto: GetUserDto): Promise<UserInfo> {
-
-    this.printLoggerServiceLog('l',dto);
+    @Headers() headers: any,
+    @Param() dto: GetUserDto,
+  ): Promise<UserInfo> {
+    this.printLoggerServiceLog('l', dto);
     const { id, affiliatedInstitution }: GetUserDto = dto;
-    const user: User = await this.usersService.getUserInfoById(id, affiliatedInstitution);
-    
-    const { 
-    //  accessLevel,
+    const user: User = await this.usersService.getUserInfoById(
+      id,
+      affiliatedInstitution,
+    );
+
+    const {
+      //  accessLevel,
       password,
       signupVerifyToken,
       jwtRefreshToken,
@@ -95,17 +110,12 @@ export class UsersController {
   }
 
   @Roles(Role.Admin)
-  @UseGuards(RolesGuard)
-  @UseGuards(AuthGuard)
-  @Get('/admin/:affiliatedInstitution/:id')
+  @Get('/usercheck')
   async getUserInfo(
-    @Headers() headers: any, 
-    @Param() dto: GetUserDto): Promise<UserInfo> {
-
-    // this.printLoggerServiceLog('l',{ dto });
-    const { id, affiliatedInstitution }: GetUserDto = dto
-   
-    return this.usersService.getUserInfoById(id, affiliatedInstitution);
+    @Headers() headers: any,
+    @Param() dto: GetUserDto,
+  ): Promise<UserInfo> {
+    return this.authService.verify();
   }
 
   // system level 2 above
@@ -113,27 +123,44 @@ export class UsersController {
   @Get()
   @Roles(Role.Admin)
   @UseGuards(RolesGuard)
-  @UseGuards(AuthGuard) 
+  @UseGuards(AuthGuard)
   findAll(
     // 유저 명수를 페이징 기법을 통해 받는다
     @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
   ) {
-    this.printLoggerServiceLog('w',{ message: "who are you? attacking"});
+    this.printLoggerServiceLog('w', { message: 'who are you? attacking' });
     return this.usersService.findAll();
+  }
+  @Get()
+  checkUserJwtIsValid(
+    @Headers() headers: any,
+    @Param() dto: GetUserDto,
+  ): Promise<UserInfo> {
+    const { id, affiliatedInstitution }: GetUserDto = dto;
+
+    return this.usersService.getUserInfoById(id, affiliatedInstitution);
   }
 
   // 유저 생성
+  // 잘못된 유저가 생성되면 안되긴 하는데 그냥 이제 누구나 유저 생성 가능하게 만들자
+  // 나중에 어떤 웹사이트에서 온 요청인지 확인하고 만들게 시킬것
+  // 현재 로그인 가능한 서비스[로컬오더, 로컬오더관리자]
+  // 각 유저별 소속된 단체가계가 조금 다름 => 이거 컬럼 따로 빼서 만들것
   @Post()
-  @Roles(Role.User)
-  @UseGuards(RolesGuard)
-  @UseGuards(AuthGuard) 
+  // @Roles(Role.User)
+  // @UseGuards(RolesGuard)
+  // @UseGuards(AuthGuard)
   async createUser(@Body() dto: CreateUserDto): Promise<void> {
     const { name, email, password, affiliatedInstitutions } = dto;
-    // this.printLoggerServiceLog('l',{ dto });
+    this.printLoggerServiceLog('l', { dto });
     // this.usersService.saveUserUsingTransaction(name, email, password, signupVerifyToken, affiliatedInstitutions)
-    this.usersService.createUser(name, email, password, affiliatedInstitutions[0])
-    return ;
+    return this.usersService.createUser(
+      name,
+      email,
+      password,
+      affiliatedInstitutions[0],
+    );
   }
 
   // 유저 회원 가입시 이메일 올바른지 검증
@@ -141,40 +168,48 @@ export class UsersController {
   async verifyEmail(@Query() dto: VerifyEmailDto): Promise<string> {
     return;
   }
-
   // 유저 로그인 및 토큰 발급
   // access 와 refresh 토큰 발행
   // 해당 url은 refresh 토큰을 마구 발급한다 refresh토큰을 마구 발급해서는 좋지 못하므로 이에 대해서 방어를 하는 로직을 짜자
   // 현재는 단순 저장의 형태가 전부다
   // 시니어 개발자님에게 리프레쉬 토큰 전략에 대해서 여쭤볼것
-  
   @Post('/login/:affiliatedInstitution')
   async signIn(
     @Body() dto: UserLoginDto,
-    @Param('affiliatedInstitution', ValidationPipe) affiliatedInstitution: string): Promise<string | object> {
-    this.printLoggerServiceLog('l',{ dto });
+    @Param('affiliatedInstitution', ValidationPipe)
+    affiliatedInstitution: string,
+  ): Promise<string | object> {
+    this.printLoggerServiceLog('l', { dto });
     const { email, password } = dto;
     const username = email;
     // 디테일한 로그인 미구현
-    return await this.usersService.login(username, password, affiliatedInstitution );;
+    return await this.usersService.login(
+      username,
+      password,
+      affiliatedInstitution,
+    );
   }
 
   @Post('/relogin/:affiliatedInstitution')
   async signInWithExhiredJwt(
     @Body() dto: TokenLoginDto,
-    @Param('affiliatedInstitution', ValidationPipe) affiliatedInstitution: string): Promise<string | object> {
-    this.printLoggerServiceLog('l',{ dto });
-    const { jwtAccessString, jwtRefreshString  } = dto;
+    @Param('affiliatedInstitution', ValidationPipe)
+    affiliatedInstitution: string,
+  ): Promise<string | object> {
+    this.printLoggerServiceLog('l', { dto });
+    const { jwtAccessString, jwtRefreshString } = dto;
     // 디테일한 로그인 미구현
-    return await this.usersService.reLoginWithExhiredJwtAccessStirng(jwtAccessString, jwtRefreshString, affiliatedInstitution );;
+    return await this.usersService.reLoginWithExhiredJwtAccessStirng(
+      jwtAccessString,
+      jwtRefreshString,
+      affiliatedInstitution,
+    );
   }
-
 }
 
 // export class CreateUserDto {
 //   readonly name: string;
 //   readonly publishedService: number;
 //   readonly email: string;
-//   readonly password: string;    
+//   readonly password: string;
 // }
-

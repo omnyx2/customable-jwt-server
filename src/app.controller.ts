@@ -1,28 +1,23 @@
-import { Controller, Request, Body, Get, Post, UseGuards } from '@nestjs/common';
-import { AppService } from './app.service';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { AppService } from './app.service';
 // import { AuthGuard } from '@nestjs/passport'
 import { AuthGuard } from './auth/auth.guard';
 // import { LocalAuthGuard } from './auth/local-auth.guard';
-// import { AuthService } from './auth/auth.service';
-import { UserLoginDto } from './dto/user-login.dto'; 
-import { doesNotReject } from 'assert';
-
 
 @Controller()
 export class AppController {
   constructor(
     private readonly appService: AppService,
     // private authService: AuthService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
   ) {}
-  
-  // *.env 파일에서 DATABASE_HOST 값을 가져온다 
+
+  // *.env 파일에서 DATABASE_HOST 값을 가져온다
   @Get('db-host-from-config')
   getDatabaseHostFromConfigService(): string {
     return this.configService.get('DATABASE_HOST');
   }
-
 
   @Get()
   getHello(): string {
@@ -32,7 +27,7 @@ export class AppController {
   @UseGuards(AuthGuard)
   @Post('auth/login')
   async login(@Body() dto: any): Promise<any> {
-    return ;
+    return;
     // const { username, password, affiliatedInstitutions } = dto
     // return dto;
     // return this.authService.login(email, password, affiliatedInstitutions);

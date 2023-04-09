@@ -1,15 +1,21 @@
-import { MiddlewareConsumer, NestModule, Module, Logger, RequestMethod } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  NestModule,
+  Module,
+  Logger,
+  RequestMethod,
+} from '@nestjs/common';
 import { AppController } from './app.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Connection } from 'typeorm';
 import { AppService } from './app.service';
-import { LoggerMiddleware, LoggerMiddleware2 } from './logger.middleware'
+import { LoggerMiddleware, LoggerMiddleware2 } from './logger.middleware';
 import { UsersModule } from './users.module';
 import { EmailService } from './email/email.service';
 import { ConfigModule } from '@nestjs/config';
 import { ConfigService } from '@nestjs/config';
 import emailConfig from './config/emailConfig';
-import authConfig from './config/authConfig'
+import authConfig from './config/authConfig';
 import { validationSchema } from './config/validationSchema';
 import { ExceptionModule } from './exception/exception.module';
 import { AuthModule } from './auth/auth.module';
@@ -33,9 +39,8 @@ import { HttpModule } from '@nestjs/axios';
       envFilePath: [`${__dirname}/config/env/.${process.env.NODE_ENV}.env`],
       load: [emailConfig, authConfig],
       isGlobal: true,
-      validationSchema,  
+      validationSchema,
     }),
-    
     // WinstonModule.forRoot({
     //   transports: [
     //     new winston.transports.Console({
@@ -53,23 +58,18 @@ import { HttpModule } from '@nestjs/axios';
     HttpModule,
     UsersModule,
     ExceptionModule,
-    AuthModule, 
-   
+    AuthModule,
   ],
   controllers: [AppController, HealthCheckController],
-  providers: [AppService, Logger, HealthCheckController
-],
+  providers: [AppService, Logger, HealthCheckController],
 })
-
 export class AppModule implements NestModule {
-  constructor(
-    private connection: Connection
-  ) {}
+  constructor(private connection: Connection) {}
 
   configure(consumer: MiddlewareConsumer): any {
     consumer
       .apply(LoggerMiddleware, LoggerMiddleware2)
-      .exclude({ path: 'users', method: RequestMethod.GET, })
+      .exclude({ path: 'users', method: RequestMethod.GET })
       .forRoutes('/users');
   }
 }
