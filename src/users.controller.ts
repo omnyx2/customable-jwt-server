@@ -114,7 +114,15 @@ export class UsersController {
     @Headers() headers: any,
     @Param() dto: GetUserDto,
   ): Promise<UserInfo> {
-    return this.authService.verify();
+    console.log(GetUserDto);
+    // return this.authService.verify();
+    return {
+      id: '',
+      email: 'string',
+      name: 'string',
+      lastActivate: 'string',
+      affiliatedInstitutions: ['string'],
+    };
   }
 
   // system level 2 above

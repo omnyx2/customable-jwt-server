@@ -57,18 +57,8 @@ import { HttpModule } from '@nestjs/axios';
     ExceptionModule,
     AuthModule,
   ],
-<<<<<<< HEAD
   controllers: [AppController, HealthCheckController],
-<<<<<<< HEAD
   providers: [AppService, Logger, HealthCheckController],
-=======
-  providers: [AppService, Logger, HealthCheckController
-],
-=======
-  controllers: [AppController],
-  providers: [AppService, Logger],
->>>>>>> parent of a9c0695... release-0.0.1
->>>>>>> f52639401289de4a213e629dbf2aa87670943a07
 })
 export class AppModule implements NestModule {
   constructor(private connection: Connection) {}

@@ -3,11 +3,11 @@
     "type": "postgres",
     "host": "localhost",
     "port": 5432,
-    "username": "postgres",
+    "username": "ryuhyunseok",
     "password": "",
     "entities": ["dist/**/*.entity{.ts,.js}"],
     "migrations": ["dist/migrations/**/*{.ts,.js}"],
-    "database": "UserDB",
+    "database": "postgres",
     "synchronize": true,
     "cli": {
 

@@ -99,7 +99,7 @@ export class UsersService {
     return user;
   }
 
-  async checkUserSimple();
+  async checkUserSimple() {}
 
   private async checkUserExistsByEmail(emailAddress: string): Promise<boolean> {
     const user = await this.usersRepository.findOne({ email: emailAddress });
